@@ -1,0 +1,9 @@
+pandas
+scikit-learn
+pillow
+nltk
+rouge_score
+kagglehub
+transformers
+peft
+opencv-python
