@@ -12,7 +12,7 @@
 <body>
   <header class="topbar">
     <a class="brand" href="#top" aria-label="CXR Second Reader workspace"><span class="brand-mark">CXR</span><span>Second Reader <small>RESEARCH WORKSPACE</small></span></a>
-    <nav aria-label="Main navigation"><a href="#status">Status</a><a href="#next">Next steps</a><a href="#notebooks">Notebooks</a><a href="https://github.com/eyadstein/cxr_second_reader">GitHub ↗</a></nav>
+    <nav aria-label="Main navigation"><a href="#case-review">Case review</a><a href="#status">Status</a><a href="#notebooks">Notebooks</a><a href="https://github.com/eyadstein/cxr_second_reader">GitHub ↗</a></nav>
   </header>
 
   <main id="top">
@@ -24,6 +24,23 @@
         <div class="actions"><a class="button primary" href="#next">Continue project <span>↓</span></a><a class="button secondary" href="https://github.com/eyadstein/cxr_second_reader/actions">GitHub workflow runs ↗</a></div>
       </div>
       <aside class="notice"><div class="notice-icon">!</div><div><strong>Research only — not for clinical use</strong><p>This project is not validated for patient care. Generated text is a draft and must be reviewed by qualified clinicians.</p></div></aside>
+    </section>
+
+    <section id="case-review" class="section case-section">
+      <div class="section-heading"><p class="eyebrow">Interactive research demo</p><h2>Review a case</h2><p>Choose an X-ray and enter the doctor’s note. The connected local model drafts from the image alone, then this page highlights report differences and lets you ask case-specific questions.</p></div>
+      <div class="api-connect"><label for="api-url">Your local model service</label><div class="api-row"><input id="api-url" type="url" value="http://127.0.0.1:8000" autocomplete="url"><button id="check-api" class="button secondary" type="button">Check connection</button><span id="api-status" role="status">Not checked</span></div><small>Start Docker on your computer first. Your image and notes are sent to that local service and are not stored by this website.</small></div>
+      <form id="case-form" class="case-form">
+        <label class="upload-control" for="case-image"><span class="upload-icon">＋</span><span><b>Choose chest X-ray</b><small>PNG or JPEG · up to 20 MB</small></span><input id="case-image" type="file" accept="image/png,image/jpeg" required></label>
+        <div id="image-preview-wrap" class="image-preview-wrap" hidden><img id="image-preview" alt="Selected X-ray preview"><button id="remove-image" type="button" class="text-button">Remove image</button></div>
+        <label class="field-label" for="doctor-notes">Doctor’s report or notes</label>
+        <textarea id="doctor-notes" name="doctor_notes" rows="6" maxlength="10000" placeholder="Enter the report you want to compare against…" required></textarea>
+        <div class="form-actions"><label class="token-setting" for="max-tokens">Draft length<select id="max-tokens"><option value="96">Short</option><option value="128" selected>Standard</option><option value="160">Detailed</option></select></label><button id="analyze-button" class="button primary" type="submit">Generate and compare</button><span id="analysis-status" role="status"></span></div>
+      </form>
+      <div id="case-results" class="case-results" hidden aria-live="polite">
+        <div class="result-grid"><article class="result-card"><div class="result-title"><span class="label">MODEL DRAFT</span><button class="text-button" type="button" data-copy="draft-output">Copy</button></div><pre id="draft-output"></pre></article><article class="result-card"><div class="result-title"><span class="label">REPORT COMPARISON</span><strong id="comparison-status"></strong></div><div id="comparison-output"></div><p id="comparison-limit" class="caveat"></p></article></div>
+        <section class="case-chat"><div><p class="eyebrow">Ask about this case</p><h3>Discuss the reports</h3><p>Answers use the selected image, notes, draft and matching report passages.</p></div><div id="chat-thread" class="chat-thread" aria-live="polite"></div><form id="chat-form" class="chat-form"><label class="sr-only" for="chat-question">Your question</label><input id="chat-question" maxlength="2000" placeholder="Ask about a finding or a difference…" required><button class="button primary" type="submit">Ask</button></form><small>Chat history stays in this browser tab. The current chat uses the same model, not a separate RAG model.</small></section>
+      </div>
+      <p class="clinical-warning"><b>Research only.</b> The comparison is a limited keyword check, not a second diagnostic model; agreement does not prove correctness. A qualified clinician must review the X-ray and reports.</p>
     </section>
 
     <section id="status" class="section compact">

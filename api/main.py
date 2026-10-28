@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from PIL import Image, UnidentifiedImageError
@@ -143,13 +144,43 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://eyadstein.github.io",
+        "http://127.0.0.1:8000",
+        "http://localhost:8000",
+    ],
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["*"],
+)
 STATIC_DIR = Path(__file__).resolve().parent / "static"
+SITE_DIR = Path(__file__).resolve().parents[1] / "docs"
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 
 @app.get("/")
 def root() -> FileResponse:
-    return FileResponse(STATIC_DIR / "index.html")
+    return FileResponse(SITE_DIR / "index.html")
+
+
+@app.get("/styles.css")
+def site_styles() -> FileResponse:
+    return FileResponse(SITE_DIR / "styles.css", media_type="text/css")
+
+
+@app.get("/app.js")
+def site_script() -> FileResponse:
+    return FileResponse(SITE_DIR / "app.js", media_type="text/javascript")
+
+
+@app.middleware("http")
+async def allow_private_network_preflight(request, call_next):
+    response = await call_next(request)
+    if request.headers.get("access-control-request-private-network", "").lower() == "true":
+        response.headers["Access-Control-Allow-Private-Network"] = "true"
+    return response
 
 
 @app.get("/api-info")
@@ -175,27 +206,14 @@ def health(response: Response) -> dict[str, Any]:
     }
 
 
-@app.post("/v1/generate")
-def generate(
-    image: UploadFile = File(..., description="PNG or JPEG chest X-ray image"),
-    max_new_tokens: int = Form(
-        MAX_NEW_TOKENS_DEFAULT,
-        ge=16,
-        le=MAX_NEW_TOKENS_LIMIT,
-        description="Maximum generated tokens (bounded to limit GPU memory use).",
-    ),
-) -> dict[str, Any]:
+def _ensure_model_ready() -> None:
     if _model is None or _processor is None:
         if _load_error:
-            raise HTTPException(
-                status_code=503,
-                detail="The model failed to load. Check the service logs and health status.",
-            )
-        raise HTTPException(
-            status_code=503,
-            detail="The model is still loading. Wait for the service status to become ready.",
-        )
+            raise HTTPException(status_code=503, detail="The model failed to load. Check service logs and /health.")
+        raise HTTPException(status_code=503, detail="The model is still loading. Wait for /health to report ready.")
 
+
+def _load_rgb(image: UploadFile) -> Image.Image:
     payload = image.file.read(MAX_UPLOAD_BYTES + 1)
     if len(payload) > MAX_UPLOAD_BYTES:
         raise HTTPException(status_code=413, detail="Image exceeds the 20 MiB upload limit.")
@@ -206,46 +224,125 @@ def generate(
             if source.width * source.height > 40_000_000:
                 raise HTTPException(status_code=413, detail="Image dimensions are too large.")
             source.load()
-            rgb = source.convert("RGB")
+            return source.convert("RGB")
     except (UnidentifiedImageError, OSError, Image.DecompressionBombError) as exc:
         raise HTTPException(status_code=415, detail="The uploaded file is not a valid image.") from exc
 
+
+def _generate(rgb: Image.Image, prompt_text: str, max_new_tokens: int) -> str:
+    _ensure_model_ready()
     messages = [{"role": "user", "content": [
         {"type": "image", "image": rgb},
-        {"type": "text", "text": PROMPT_TEXT},
+        {"type": "text", "text": prompt_text},
     ]}]
-
     import torch
-
     with _model_lock, torch.inference_mode():
         inputs = _processor.apply_chat_template(
-            messages,
-            add_generation_prompt=True,
-            tokenize=True,
-            return_dict=True,
-            return_tensors="pt",
+            messages, add_generation_prompt=True, tokenize=True,
+            return_dict=True, return_tensors="pt",
         )
         inputs.pop("token_type_ids", None)
         inputs = {key: value.to(_model.device) for key, value in inputs.items()}
         if "pixel_values" in inputs:
-            inputs["pixel_values"] = inputs["pixel_values"].to(
-                next(_model.parameters()).dtype
-            )
+            inputs["pixel_values"] = inputs["pixel_values"].to(next(_model.parameters()).dtype)
         input_length = inputs["input_ids"].shape[-1]
         output = _model.generate(
-            **inputs,
-            max_new_tokens=max_new_tokens,
-            do_sample=False,
-            use_cache=True,
+            **inputs, max_new_tokens=max_new_tokens, do_sample=False, use_cache=True,
         )
+    return _processor.decode(output[0, input_length:], skip_special_tokens=True).strip()
 
-    report = _processor.decode(
-        output[0, input_length:], skip_special_tokens=True
-    ).strip()
+
+@app.post("/v1/generate")
+def generate(
+    image: UploadFile = File(..., description="PNG or JPEG chest X-ray image"),
+    max_new_tokens: int = Form(
+        MAX_NEW_TOKENS_DEFAULT,
+        ge=16,
+        le=MAX_NEW_TOKENS_LIMIT,
+        description="Maximum generated tokens (bounded to limit GPU memory use).",
+    ),
+) -> dict[str, Any]:
+    rgb = _load_rgb(image)
+    report = _generate(rgb, PROMPT_TEXT, max_new_tokens)
     return {
         "draft_report": report,
         "model_id": MODEL_ID,
         "adapter": ADAPTER_DIR.name,
         "device": _device_name,
         "warning": "Experimental draft only. Review image and report; not for clinical use.",
+    }
+
+
+@app.post("/v1/analyze")
+def analyze(
+    image: UploadFile = File(..., description="PNG or JPEG chest X-ray image"),
+    doctor_notes: str = Form(..., min_length=1, max_length=10000),
+    max_new_tokens: int = Form(MAX_NEW_TOKENS_DEFAULT, ge=16, le=MAX_NEW_TOKENS_LIMIT),
+) -> dict[str, Any]:
+    """Draft from image alone, then show transparent term-level comparison."""
+    from api.review import compare_reports
+    rgb = _load_rgb(image)
+    # Deliberately do not provide doctor notes to the image model: this avoids
+    # anchoring its draft to the report it is meant to compare against.
+    draft = _generate(rgb, PROMPT_TEXT, max_new_tokens)
+    comparison = compare_reports(doctor_notes, draft)
+    return {
+        "draft_report": draft,
+        "comparison": comparison,
+        "model_id": MODEL_ID,
+        "adapter": ADAPTER_DIR.name,
+        "warning": "Research prototype. Text comparison is heuristic, not an independent medical model or correctness judgment.",
+    }
+
+
+@app.post("/v1/chat")
+def chat(
+    image: UploadFile = File(...),
+    doctor_notes: str = Form(..., max_length=10000),
+    draft_report: str = Form(..., max_length=10000),
+    comparison_json: str = Form(..., max_length=10000),
+    question: str = Form(..., min_length=1, max_length=2000),
+    chat_history: str = Form("[]", max_length=12000),
+    max_new_tokens: int = Form(128, ge=16, le=MAX_NEW_TOKENS_LIMIT),
+) -> dict[str, Any]:
+    """Answer using only the image and report-pair context for this case."""
+    import json
+    from api.review import retrieve_case_context
+    rgb = _load_rgb(image)
+    try:
+        comparison = json.loads(comparison_json)
+        if not isinstance(comparison, dict):
+            raise ValueError("comparison must be an object")
+    except (json.JSONDecodeError, ValueError) as exc:
+        raise HTTPException(status_code=400, detail="Invalid comparison data.") from exc
+    context = retrieve_case_context(question, doctor_notes, draft_report, comparison)
+    context_text = "\n".join(f"- {line}" for line in context) or "No matching report sentences were found."
+    try:
+        history = json.loads(chat_history)
+        if not isinstance(history, list) or any(
+            not isinstance(turn, dict)
+            or turn.get("role") not in {"user", "assistant"}
+            or not isinstance(turn.get("content"), str)
+            for turn in history[-8:]
+        ):
+            raise ValueError("chat history must be a list of user/assistant turns")
+    except (json.JSONDecodeError, ValueError) as exc:
+        raise HTTPException(status_code=400, detail="Invalid chat history.") from exc
+    history_text = "\n".join(
+        f"{turn['role'].title()}: {turn['content'][:1000]}" for turn in history[-8:]
+    )
+    prompt = (
+        "You are a research-demo assistant discussing this one chest X-ray case. "
+        "Use the image and retrieved report context below. Explain agreements or differences plainly. "
+        "Do not declare a report correct, make a diagnosis, or recommend treatment. "
+        "If evidence is insufficient, say so and defer to a qualified radiologist.\n\n"
+        f"Doctor note:\n{doctor_notes}\n\nModel draft:\n{draft_report}\n\n"
+        f"Retrieved case context:\n{context_text}\n\n"
+        f"Recent chat:\n{history_text or 'No earlier turns.'}\n\nQuestion: {question}"
+    )
+    answer = _generate(rgb, prompt, max_new_tokens)
+    return {
+        "answer": answer,
+        "retrieved_context": context,
+        "warning": "Case-grounded research chat only; not clinical advice or an independent correctness check.",
     }

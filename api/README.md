@@ -22,13 +22,15 @@ From the project root:
 docker compose up --build
 ```
 
-The API and browser interface bind to `127.0.0.1:8000` only. Before starting,
+The API binds to `127.0.0.1:8000` only. Before starting,
 put the adapter files at `qwen3vl_cxr/qwen3vl-cxr-lora/`. First startup
 downloads the base model in the background and can take several minutes. Open
 <http://127.0.0.1:8000> for the research interface, <http://127.0.0.1:8000/docs>
 for the interactive API page, and <http://127.0.0.1:8000/health> for model
-readiness. The interface is available while the model loads and reports when
-generation is ready.
+readiness. The research interface is available while the model loads and
+reports when generation is ready. You can also use **Review a case** on the
+public project website; it connects to this local service, so inference still
+runs on your computer.
 
 To create a draft from a PNG or JPEG image:
 
@@ -38,12 +40,19 @@ curl.exe -X POST "http://127.0.0.1:8000/v1/generate" `
   -F "max_new_tokens=96"
 ```
 
+The case-review page uses `POST /v1/analyze` to draft from the image alone,
+then show a limited term-level comparison with the clinician's note. It uses
+`POST /v1/chat` for questions about that case. Chat retrieves matching
+sentences from the note, draft, and comparison and calls the same Qwen model;
+it is not a separate RAG or diagnostic model. The comparison is not a judgment
+of which report is correct.
+
 To stop the service, press Ctrl+C. If the local machine has no supported GPU,
 use the Colab notebook to run inference; setting `ALLOW_CPU_INFERENCE=1` is
 possible but can be extremely slow and memory-intensive.
 
-The UI does not persist uploaded images or drafts. The image is sent to the
-configured API host only after Generate is pressed. Keep the service private;
+The page and API do not persist uploaded images, notes, drafts, or chat. The
+image is sent to the local API only after the case form is submitted. Keep the service private;
 public hosting needs an explicit GPU host, HTTPS, authentication, and privacy
 controls before uploading any patient data.
 

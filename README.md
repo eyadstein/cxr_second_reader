@@ -7,9 +7,12 @@ Generated text is an experimental draft and requires qualified clinician review.
 **Project website:** [CXR Second Reader](https://eyadstein.github.io/cxr_second_reader/)
 · [GitHub release v0.1.0](https://github.com/eyadstein/cxr_second_reader/releases/tag/v0.1.0)
 
-The website is a public project overview. The FastAPI inference service runs
-locally and is not hosted at the website URL, so report generation is not
-available from the public project page.
+The website includes a case-review interface. It connects to the FastAPI service
+running on the same computer at `http://127.0.0.1:8000`; the public website does
+not host model inference. Start Docker locally, open the public project page,
+and use **Review a case**. The browser sends the selected image and report only
+to that local service after you submit the form. Images, notes, and chat are not
+saved by the page or API.
 
 ## Project status
 
@@ -18,13 +21,26 @@ available from the public project page.
 | Indiana metadata preparation and study-level splits | Implemented; 6,685 image rows, 3,440 studies, no study overlap across splits in the reported run | `notebooks/09_qwen3vl_cxr.ipynb` |
 | Qwen3-VL 2B zero-shot baseline | An earlier exploratory run generated 24 reports; those study IDs are treated as exposed and excluded from the new final test set | Drive results copied to `qwen3vl_cxr/` |
 | Qwen3-VL QLoRA | Latest supplied archive records step 920 (about 230 optimizer updates at accumulation 4) and includes adapter, optimizer, and loss history; this is a checkpoint count, not evidence of convergence or quality | `qwen3vl_cxr/`, `notebooks/09_qwen3vl_cxr.ipynb` |
-| FastAPI inference service | Implemented with a research-only browser UI; expects a CUDA GPU and saved adapter | `api/` |
+| FastAPI inference service | Image-only Qwen draft, limited report-term comparison, and same-model case-grounded chat; expects a CUDA GPU and saved adapter | `api/` |
 | Docker packaging and local API | Rebuilt and started; UI endpoints return HTTP 200, Qwen reached ready on the local GPU, synthetic-image inference returned HTTP 200 | `Dockerfile`, `compose.yaml`, `api/` |
 | Constant-normal/random and text retrieval controls | Implemented | `notebooks/00_baselines.ipynb`, `notebooks/05_approach4_retrieval.ipynb` |
 | DenseNet-attention LSTM and ViT-GPT2 report baselines | Runnable code added; GPU training has not yet been executed in this environment | `notebooks/02`–`03` |
 | Qwen3-VL QLoRA artifact review | Reads saved evaluation files; training remains centralized in notebook 09 | `notebooks/04`, `09_qwen3vl_cxr.ipynb` |
 | Image/indication fusion and Grad-CAM review | Runnable exploratory workflows added; GPU runs and validation remain | `notebooks/06`–`07` |
 | RAG-style research context | Retrieves training-report examples; external knowledge ingestion and generated answers remain future work | `notebooks/08_rag_assistant.ipynb` |
+
+## Case review workflow
+
+1. Start the local model API using the Docker instructions in `api/README.md`.
+2. Open the [project website](https://eyadstein.github.io/cxr_second_reader/), go to **Review a case**, and check that the local model reports ready.
+3. Choose a PNG/JPEG X-ray and enter the clinician's report or notes. The model receives the image without the clinician's note and produces a separate draft.
+4. Review the draft alongside the term-level comparison. It only looks for a small set of finding terms and approximate negation; it is not a second diagnostic model and does not determine who is correct.
+5. Ask a case-specific question. The chat retrieves matching sentences from the supplied note, generated draft, and comparison, then asks the same Qwen model to respond using that context and image.
+
+The website is static and public, while inference remains local to your computer.
+Only synthetic or appropriately de-identified images should be used in this
+research demo. This workflow is not validated for clinical use. Agreement
+between reports is not evidence of diagnostic accuracy.
 
 ## Observed run and evaluation limits
 
