@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1220">
+  <meta name="description" content="CXR Second Reader — an educational research prototype for chest X-ray report generation and review.">
+  <title>CXR Second Reader — Research Project</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#top" aria-label="CXR Second Reader home"><span class="brand-mark">CXR</span><span>Second Reader</span></a>
+    <nav aria-label="Main navigation"><a href="#workflow">Workflow</a><a href="#status">Project status</a><a href="https://github.com/eyadstein/cxr_second_reader">Repository ↗</a></nav>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="dot"></span> Open research prototype</p>
+        <h1>A second set of eyes<br><span>for chest X-ray research.</span></h1>
+        <p class="lede">A reproducible workspace for comparing report-generation, retrieval, and image-plus-indication experiments on the Indiana University chest X-ray dataset.</p>
+        <div class="actions"><a class="button primary" href="https://github.com/eyadstein/cxr_second_reader">Explore the code <span>↗</span></a><a class="button secondary" href="https://github.com/eyadstein/cxr_second_reader/blob/main/README.md">Read project notes</a></div>
+      </div>
+      <aside class="notice" aria-label="Clinical use notice">
+        <div class="notice-icon">i</div>
+        <div><strong>Research use only</strong><p>This project does not provide a diagnosis and is not for patient-care decisions. Generated reports require qualified clinician review.</p></div>
+      </aside>
+    </section>
+
+    <section id="status" class="status-panel">
+      <div><p class="eyebrow">Deployment status</p><h2>Website is online · Inference API is private</h2><p>This GitHub Pages site is a public project overview. The FastAPI model service currently runs locally and is not reachable from this page. No X-ray upload or report generation is sent to GitHub Pages.</p></div>
+      <span class="status-badge"><span class="dot"></span> Project site live</span>
+    </section>
+
+    <section id="workflow" class="section">
+      <div class="section-heading"><p class="eyebrow">Inside the project</p><h2>One workspace, staged experiments</h2><p>Each approach shares the same study-level splits and local data loader so results can be reviewed consistently.</p></div>
+      <div class="cards">
+        <article class="card"><span class="card-number">01</span><h3>Prepare & split</h3><p>Normalize metadata, connect image/report pairs, and keep study IDs separated across train, validation, and test.</p><a href="https://github.com/eyadstein/cxr_second_reader/blob/main/notebooks/01_prepare_data.ipynb">Data preparation ↗</a></article>
+        <article class="card"><span class="card-number">02</span><h3>Compare approaches</h3><p>Run baselines for report generation, retrieval, multimodal classification, and Qwen3-VL QLoRA.</p><a href="https://github.com/eyadstein/cxr_second_reader/tree/main/notebooks">Browse notebooks ↗</a></article>
+        <article class="card"><span class="card-number">03</span><h3>Review carefully</h3><p>Use validation for model choices. Final test comparisons exclude studies already viewed in earlier exploratory runs.</p><a href="https://github.com/eyadstein/cxr_second_reader/blob/main/README.md#observed-run-and-evaluation-limits">Read evaluation limits ↗</a></article>
+      </div>
+    </section>
+
+    <section class="deployment-card">
+      <div><p class="eyebrow">For contributors</p><h2>Run the inference demo locally</h2><p>The FastAPI browser interface is included in the repository. Start it with Docker after placing the saved adapter in the documented local folder.</p></div>
+      <a class="button secondary" href="https://github.com/eyadstein/cxr_second_reader/tree/main/api">API setup guide ↗</a>
+    </section>
+  </main>
+  <footer><span>CXR Second Reader · Educational research prototype</span><a href="https://github.com/eyadstein/cxr_second_reader">GitHub ↗</a><span>Not for clinical use</span></footer>
+</body>
+</html>
