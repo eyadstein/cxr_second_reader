@@ -91,6 +91,10 @@ async function checkApi() {
 }
 document.querySelector("#check-api").addEventListener("click", checkApi);
 apiUrlInput.addEventListener("change", () => status("Not checked"));
+if (["localhost", "127.0.0.1"].includes(location.hostname)) {
+  apiUrlInput.value = location.origin;
+  checkApi();
+}
 imageInput.addEventListener("change", () => {
   if (previewUrl) URL.revokeObjectURL(previewUrl);
   const file = imageInput.files?.[0];
