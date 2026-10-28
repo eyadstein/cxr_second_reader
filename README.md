@@ -12,7 +12,7 @@ Generated text is an experimental draft and requires qualified clinician review.
 | Qwen3-VL 2B zero-shot baseline | An earlier exploratory run generated 24 reports; those study IDs are treated as exposed and excluded from the new final test set | Drive results copied to `qwen3vl_cxr/` |
 | Qwen3-VL QLoRA | Latest supplied archive records step 920 (about 230 optimizer updates at accumulation 4) and includes adapter, optimizer, and loss history; this is a checkpoint count, not evidence of convergence or quality | `qwen3vl_cxr/`, `notebooks/09_qwen3vl_cxr.ipynb` |
 | FastAPI inference service | Implemented with a research-only browser UI; expects a CUDA GPU and saved adapter | `api/` |
-| Docker packaging and local API | Rebuilt and started; UI endpoints return HTTP 200, Qwen reached ready on RTX 3050, synthetic-image inference returned HTTP 200 | `Dockerfile`, `compose.yaml`, `api/` |
+| Docker packaging and local API | Rebuilt and started; UI endpoints return HTTP 200, Qwen reached ready on the local GPU, synthetic-image inference returned HTTP 200 | `Dockerfile`, `compose.yaml`, `api/` |
 | Constant-normal/random and text retrieval controls | Implemented | `notebooks/00_baselines.ipynb`, `notebooks/05_approach4_retrieval.ipynb` |
 | DenseNet-attention LSTM and ViT-GPT2 report baselines | Runnable code added; GPU training has not yet been executed in this environment | `notebooks/02`–`03` |
 | Qwen3-VL QLoRA artifact review | Reads saved evaluation files; training remains centralized in notebook 09 | `notebooks/04`, `09_qwen3vl_cxr.ipynb` |
@@ -109,7 +109,7 @@ mistaken for model findings or repeated unnecessarily.
    validation set. Record the exact configuration and retain the current 24
    case output as a small preliminary baseline, not the final study.
 3. **Use the local API demo.** Follow `api/README.md`. The rebuilt local
-   service reached ready state on an RTX 3050 and passed a synthetic-image
+   service reached ready state on the configured GPU and passed a synthetic-image
    inference smoke check. Review outputs as research drafts only.
 4. **Complete research evaluation.** Increase held-out evaluation coverage,
    report confidence intervals where appropriate, perform blinded expert review,
@@ -151,12 +151,12 @@ downloads are disabled unless you explicitly set
 **Python (CXR Second Reader)** kernel. Run each notebook by stage; avoid **Run
 All** for GPU training workflows.
 
-The Qwen notebook checks CUDA before model setup. This computer's RTX 3050 has
-4 GB VRAM, which is enough for the local 4-bit inference service that was
-verified, but may not fit Qwen vision-language LoRA training. Training also
-needs substantial free disk space for dependencies, the base model, cached
-weights, dataset, and checkpoints. Do not start a long run until CUDA is
-visible, the data path resolves, and sufficient disk space is available.
+The Qwen notebook checks CUDA before model setup. The current local GPU setup
+was verified for 4-bit inference, but its available VRAM may not fit Qwen
+vision-language LoRA training. Training also needs substantial free disk space
+for dependencies, base-model weights, the dataset, and checkpoints. Do not start
+a long run until CUDA is visible, the data path resolves, and sufficient disk
+space is available.
 
 Notebooks 02–03 now include a final held-out test cell to run once after
 validation-based model selection. Notebook 05 queries retrieval by indication
@@ -216,3 +216,4 @@ The local GitHub remote is configured, but changes in this working copy are not
 published automatically. `qwen3vl_cxr/` is ignored by Git because it contains
 model weights, optimizer state, and evaluation outputs; keep a backup and share
 those artifacts separately when needed.
+

@@ -151,7 +151,7 @@ generateButton.addEventListener("click", async () => {
     latestDraft = String(payload.draft_report || "").trim();
     if (!latestDraft) throw new Error("The model returned an empty draft. Try once more.");
     reportText.textContent = latestDraft;
-    reportModel.textContent = `${payload.model_id || "Qwen3-VL"} · ${payload.device || ""}`;
+    reportModel.textContent = payload.model_id || "Qwen3-VL";
     showOnly("result");
     reportText.focus();
   } catch (error) {

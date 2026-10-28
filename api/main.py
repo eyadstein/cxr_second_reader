@@ -82,7 +82,8 @@ def _load_model() -> None:
             device_map="auto",
             attn_implementation=os.getenv("ATTN_IMPLEMENTATION", "sdpa"),
         )
-        _device_name = torch.cuda.get_device_name(0)
+        # Keep host-specific GPU details out of the public UI/health response.
+        _device_name = "GPU accelerated"
     else:
         compute_dtype = torch.float32
         base = Qwen3VLForConditionalGeneration.from_pretrained(
