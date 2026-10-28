@@ -4,6 +4,13 @@ An educational research prototype for comparing chest X-ray report-generation
 and retrieval workflows. **Not for clinical use or patient-care decisions.**
 Generated text is an experimental draft and requires qualified clinician review.
 
+**Project website:** [CXR Second Reader](https://eyadstein.github.io/cxr_second_reader/)
+· [GitHub release v0.1.0](https://github.com/eyadstein/cxr_second_reader/releases/tag/v0.1.0)
+
+The website is a public project overview. The FastAPI inference service runs
+locally and is not hosted at the website URL, so report generation is not
+available from the public project page.
+
 ## Project status
 
 | Area | Status | Location |
