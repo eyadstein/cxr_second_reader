@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#102b3a" />
+    <meta name="description" content="Research-only chest X-ray report drafting interface." />
+    <title>CXR Second Reader</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/static/app.css" />
+    <script src="/static/app.js" defer></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="CXR Second Reader home">
+        <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></span>
+        <span><strong>CXR</strong><small>SECOND READER</small></span>
+      </a>
+      <div class="topbar-right">
+        <span class="mode-label">RESEARCH WORKSPACE</span>
+        <span id="service-status" class="status-pill status-loading" role="status" aria-live="polite">
+          <span class="status-dot"></span><span id="service-status-text">Checking model…</span>
+        </span>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow"><span class="eyebrow-line"></span> IMAGE-TO-TEXT RESEARCH DEMO</p>
+          <h1>A second set of eyes<br /><span>for the image.</span></h1>
+          <p class="hero-description">Create an experimental draft of visible chest X-ray findings for qualified human review.</p>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <div class="art-orbit orbit-one"></div><div class="art-orbit orbit-two"></div>
+          <div class="xray-card"><div class="xray-lungs"><span></span><span></span></div><div class="xray-spine"></div><div class="xray-ribs ribs-left"></div><div class="xray-ribs ribs-right"></div><div class="xray-caption">CHEST · FRONTAL</div></div>
+          <span class="art-spark spark-one">✳</span><span class="art-spark spark-two">✦</span>
+        </div>
+      </section>
+
+      <section class="notice" aria-label="Research-use notice">
+        <span class="notice-icon" aria-hidden="true">!</span>
+        <p><strong>Research prototype — not for clinical use.</strong> This model can omit findings or generate unsupported statements. It does not diagnose disease or guide patient care. A qualified clinician must review the image and every generated draft.</p>
+      </section>
+
+      <div class="workspace-grid">
+        <section class="panel upload-panel" aria-labelledby="upload-heading">
+          <div class="panel-heading">
+            <div><p class="step-label">STEP 01</p><h2 id="upload-heading">Add an X-ray image</h2></div>
+            <span class="file-limit">PNG or JPG · up to 20 MB</span>
+          </div>
+          <input id="image-input" class="visually-hidden" type="file" accept="image/png,image/jpeg" />
+          <button id="drop-zone" class="drop-zone" type="button" aria-describedby="upload-hint">
+            <span id="upload-content" class="upload-content">
+              <span class="upload-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14.5v4A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5v-4" /></svg></span>
+              <strong>Choose an image</strong><span>or drag and drop it here</span>
+              <span class="browse-link">Browse files</span>
+            </span>
+          </button>
+          <p id="upload-hint" class="field-hint">Use a de-identified image. Do not upload names, labels, or other patient identifiers.</p>
+          <div id="preview-card" class="preview-card hidden">
+            <div class="preview-image-wrap"><img id="image-preview" alt="Selected chest X-ray preview" /></div>
+            <div class="preview-meta"><span class="preview-label">SELECTED IMAGE</span><strong id="file-name"></strong><span id="file-size" class="field-hint"></span></div>
+            <button id="remove-image" class="icon-button" type="button" aria-label="Remove selected image">×</button>
+          </div>
+
+          <div class="settings-row">
+            <label for="token-count">Draft length <span id="token-value">96 tokens</span></label>
+            <input id="token-count" type="range" min="32" max="160" step="8" value="96" />
+            <div class="range-labels"><span>Short</span><span>Detailed</span></div>
+          </div>
+
+          <button id="generate-button" class="primary-button" type="button" disabled>
+            <span class="button-label">Generate draft</span><span class="button-arrow" aria-hidden="true">→</span>
+          </button>
+          <p id="form-message" class="form-message" role="status" aria-live="polite"></p>
+          <p class="privacy-note"><span aria-hidden="true">⌑</span> The selected image is sent to this service only when you generate. This demo does not save uploads to a database.</p>
+        </section>
+
+        <section class="panel result-panel" aria-labelledby="result-heading">
+          <div class="panel-heading">
+            <div><p class="step-label">STEP 02</p><h2 id="result-heading">Review the draft</h2></div>
+            <div class="result-actions hidden" id="result-actions">
+              <button id="copy-button" class="secondary-button" type="button">Copy</button>
+              <button id="download-button" class="secondary-button" type="button">Save .txt</button>
+            </div>
+          </div>
+          <div id="result-empty" class="result-empty">
+            <div class="report-icon" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+            <strong>Your draft will appear here</strong>
+            <p>Choose an image, then generate a draft for review.</p>
+          </div>
+          <div id="result-loading" class="result-loading hidden" role="status" aria-live="polite">
+            <span class="loader-ring"></span><strong>Reviewing the image…</strong><p>This can take a little while on the first request.</p>
+          </div>
+          <article id="report-result" class="report-result hidden">
+            <div class="report-meta"><span class="report-tag">MODEL DRAFT</span><span id="report-model"></span></div>
+            <div id="report-text" class="report-text" tabindex="0"></div>
+            <p class="report-warning">Draft only. Confirm every statement against the image and clinical context.</p>
+          </article>
+          <div id="result-error" class="result-error hidden" role="alert"><strong>We couldn’t create a draft.</strong><p id="error-detail"></p></div>
+        </section>
+      </div>
+
+      <footer class="page-footer">
+        <span>CXR SECOND READER <span class="footer-separator">/</span> RESEARCH PROTOTYPE</span>
+        <a href="/docs" target="_blank" rel="noreferrer">API documentation <span aria-hidden="true">↗</span></a>
+      </footer>
+    </main>
+  </body>
+</html>

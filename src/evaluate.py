@@ -17,7 +17,7 @@ KEYWORDS = {
     "Pulmonary edema": ["edema"],
     "Nodule or mass": ["nodule", "mass"],
 }
-NEG = re.compile(r"\b(no|without|negative for|free of|absent|resolved)\b")
+NEG = re.compile(r"\b(no|without|negative for|free of|absent|resolved|not seen|not identified)\b")
 
 def extract_labels(text):
     out = np.zeros(len(LABELS), dtype=int)
@@ -32,6 +32,10 @@ def extract_labels(text):
     return out
 
 def evaluate(preds, refs):
+    if len(preds) != len(refs):
+        raise ValueError(f"preds and refs must have the same length ({len(preds)} != {len(refs)}).")
+    if not preds:
+        raise ValueError("Cannot evaluate an empty prediction/reference list.")
     rl = rouge_scorer.RougeScorer(["rougeL"])
     rouge = np.mean([rl.score(r, p)["rougeL"].fmeasure for p, r in zip(preds, refs)])
     bleu = corpus_bleu([[r.split()] for r in refs], [p.split() for p in preds],
@@ -53,5 +57,10 @@ def random_retrieval(train_texts, n, seed=0):
 
 def log_result(name, metrics):
     row = {"name": name, **{k: v for k, v in metrics.items() if k != "per_label_f1"}}
-    f = f"{SHARED}/results.csv"
-    pd.DataFrame([row]).to_csv(f, mode="a", header=not os.path.exists(f), index=False)
+    os.makedirs(SHARED, exist_ok=True)
+    f = os.path.join(SHARED, "results.csv")
+    previous = pd.read_csv(f) if os.path.exists(f) else pd.DataFrame()
+    # Re-running a notebook updates that experiment instead of duplicating rows.
+    if not previous.empty and "name" in previous:
+        previous = previous[previous["name"] != name]
+    pd.concat([previous, pd.DataFrame([row])], ignore_index=True).to_csv(f, index=False)

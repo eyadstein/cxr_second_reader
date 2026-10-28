@@ -1,9 +1,16 @@
+# Colab provides its own CUDA-matched PyTorch build; do not replace it from this file.
 pandas
+numpy
 scikit-learn
 pillow
-nltk
-rouge_score
-kagglehub
-transformers
-peft
+matplotlib
+seaborn
+missingno
 opencv-python
+nltk
+rouge-score
+kagglehub
+transformers>=4.57.0
+accelerate
+peft
+bitsandbytes>=0.46.1

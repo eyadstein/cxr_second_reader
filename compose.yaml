@@ -1,0 +1,38 @@
+services:
+  cxr-api:
+    build: .
+    image: cxr-second-reader-api:local
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      MODEL_ID: Qwen/Qwen3-VL-2B-Instruct
+      ADAPTER_DIR: /app/qwen3vl_cxr/qwen3vl-cxr-lora
+      HF_HOME: /cache/huggingface
+      MAX_NEW_TOKENS_DEFAULT: "96"
+      # Optional: provide HF_TOKEN in the shell environment for Hub rate limits.
+      HF_TOKEN: ${HF_TOKEN:-}
+    volumes:
+      - hf-cache:/cache/huggingface
+      # Keep the private/large adapter outside Git and outside the image build context.
+      - ./qwen3vl_cxr/qwen3vl-cxr-lora:/app/qwen3vl_cxr/qwen3vl-cxr-lora:ro
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10m
+
+volumes:
+  hf-cache:

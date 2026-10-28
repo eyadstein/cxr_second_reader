@@ -3,3 +3,9 @@ __pycache__/
 *.pt
 *.pth
 .env
+data/
+outputs/
+results.csv
+cxr_shared/
+qwen3vl_cxr/
+.hf_cache/
