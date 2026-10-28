@@ -4,58 +4,77 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0b1220">
-  <meta name="description" content="CXR Second Reader — an educational research prototype for chest X-ray report generation and review.">
-  <title>CXR Second Reader — Research Project</title>
+  <meta name="description" content="CXR Second Reader research workspace: project status, notebooks, training checkpoints, evaluation, and API links.">
+  <title>CXR Second Reader — Research Workspace</title>
   <link rel="stylesheet" href="styles.css">
+  <script defer src="app.js"></script>
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="#top" aria-label="CXR Second Reader home"><span class="brand-mark">CXR</span><span>Second Reader</span></a>
-    <nav aria-label="Main navigation"><a href="#workflow">Workflow</a><a href="#workspace">Project files</a><a href="https://github.com/eyadstein/cxr_second_reader">Repository ↗</a></nav>
+    <a class="brand" href="#top" aria-label="CXR Second Reader workspace"><span class="brand-mark">CXR</span><span>Second Reader <small>RESEARCH WORKSPACE</small></span></a>
+    <nav aria-label="Main navigation"><a href="#status">Status</a><a href="#next">Next steps</a><a href="#notebooks">Notebooks</a><a href="https://github.com/eyadstein/cxr_second_reader">GitHub ↗</a></nav>
   </header>
 
   <main id="top">
     <section class="hero">
-      <div class="hero-copy">
-        <p class="eyebrow"><span class="dot"></span> Open research prototype</p>
-        <h1>A second set of eyes<br><span>for chest X-ray research.</span></h1>
-        <p class="lede">A reproducible workspace for comparing report-generation, retrieval, and image-plus-indication experiments on the Indiana University chest X-ray dataset.</p>
-        <div class="actions"><a class="button primary" href="https://github.com/eyadstein/cxr_second_reader">Explore the code <span>↗</span></a><a class="button secondary" href="https://github.com/eyadstein/cxr_second_reader/blob/main/README.md">Read project notes</a></div>
+      <div>
+        <p class="eyebrow"><span class="dot"></span> Project development is ongoing</p>
+        <h1>Your CXR project,<br><span>in one workspace.</span></h1>
+        <p class="lede">Track the dataset, saved model checkpoint, evaluation status, notebooks, and development workflow while the research continues.</p>
+        <div class="actions"><a class="button primary" href="#next">Continue project <span>↓</span></a><a class="button secondary" href="https://github.com/eyadstein/cxr_second_reader/actions">GitHub workflow runs ↗</a></div>
       </div>
-      <aside class="notice" aria-label="Clinical use notice">
-        <div class="notice-icon">i</div>
-        <div><strong>Research use only</strong><p>This project does not provide a diagnosis and is not for patient-care decisions. Generated reports require qualified clinician review.</p></div>
-      </aside>
+      <aside class="notice"><div class="notice-icon">!</div><div><strong>Research only — not for clinical use</strong><p>This project is not validated for patient care. Generated text is a draft and must be reviewed by qualified clinicians.</p></div></aside>
     </section>
 
-    <section id="status" class="status-panel">
-      <div><p class="eyebrow">Deployment status</p><h2>Website is online · Inference API is private</h2><p>This GitHub Pages site is a public project overview. The FastAPI model service currently runs locally and is not reachable from this page. No X-ray upload or report generation is sent to GitHub Pages.</p></div>
-      <span class="status-badge"><span class="dot"></span> Project site live</span>
-    </section>
-
-    <section id="workflow" class="section">
-      <div class="section-heading"><p class="eyebrow">Inside the project</p><h2>One workspace, staged experiments</h2><p>Each approach shares the same study-level splits and local data loader so results can be reviewed consistently.</p></div>
-      <div class="cards">
-        <article class="card"><span class="card-number">01</span><h3>Prepare & split</h3><p>Normalize metadata, connect image/report pairs, and keep study IDs separated across train, validation, and test.</p><a href="https://github.com/eyadstein/cxr_second_reader/blob/main/notebooks/01_prepare_data.ipynb">Data preparation ↗</a></article>
-        <article class="card"><span class="card-number">02</span><h3>Compare approaches</h3><p>Run baselines for report generation, retrieval, multimodal classification, and Qwen3-VL QLoRA.</p><a href="https://github.com/eyadstein/cxr_second_reader/tree/main/notebooks">Browse notebooks ↗</a></article>
-        <article class="card"><span class="card-number">03</span><h3>Review carefully</h3><p>Use validation for model choices. Final test comparisons exclude studies already viewed in earlier exploratory runs.</p><a href="https://github.com/eyadstein/cxr_second_reader/blob/main/README.md#observed-run-and-evaluation-limits">Read evaluation limits ↗</a></article>
+    <section id="status" class="section compact">
+      <div class="section-heading"><p class="eyebrow">Current project state</p><h2>What exists now</h2></div>
+      <div class="status-grid">
+        <article class="status-card"><span class="label">DATASET</span><strong>6,685 images · 3,440 studies</strong><p>Study-level split has no UID overlap. Image files remain local and are not stored on this website.</p><div class="mini-stats"><span>Train <b>5,359 rows</b></span><span>Validation <b>659 rows</b></span><span>Test <b>667 rows</b></span></div></article>
+        <article class="status-card"><span class="label">QWEN QLoRA</span><strong>Saved checkpoint: step 920</strong><p>About 230 optimizer updates at gradient accumulation 4. A saved step count does not establish convergence or quality.</p><a href="https://github.com/eyadstein/cxr_second_reader/blob/main/notebooks/09_qwen3vl_cxr.ipynb">Open training notebook ↗</a></article>
+        <article class="status-card"><span class="label">EVALUATION</span><strong>Fresh checkpoint comparison pending</strong><p>The displayed 24-case scores are legacy results from the earlier step-400 run, not step 920. They are text-overlap scores, not medical accuracy.</p><div class="score-row"><span>ROUGE-L <b>0.188 → 0.331</b></span><span>BLEU <b>0.027 → 0.070</b></span></div></article>
+        <article class="status-card"><span class="label">DEPLOYMENT</span><strong>Project site live · model API local</strong><p>This dashboard is public. Report generation is available only from the local Docker API when it is running; this page does not upload X-rays.</p><a href="http://127.0.0.1:8000" target="_blank" rel="noopener">Open local inference app ↗</a></article>
       </div>
     </section>
 
-    <section id="workspace" class="section workspace">
-      <div class="section-heading"><p class="eyebrow">Project workspace</p><h2>Find the code, notebooks, and run history</h2><p>The public overview is this website. The working files and execution history are in the GitHub repository.</p></div>
-      <div class="cards">
-        <article class="card"><span class="card-number">NOTEBOOKS</span><h3>Experiments 00–09</h3><p>Data prep, baselines, report generation, retrieval, classification, Grad-CAM, RAG, and Qwen3-VL.</p><div class="link-list"><a href="https://github.com/eyadstein/cxr_second_reader/blob/main/notebooks/00_baselines.ipynb">00 · Baselines ↗</a><a href="https://github.com/eyadstein/cxr_second_reader/blob/main/notebooks/01_prepare_data.ipynb">01 · Prepare data ↗</a><a href="https://github.com/eyadstein/cxr_second_reader/blob/main/notebooks/02_approach1_cnn_attention_lstm.ipynb">02 · CNN + attention LSTM ↗</a><a href="https://github.com/eyadstein/cxr_second_reader/blob/main/notebooks/03_approach2_vision_encoder_decoder.ipynb">03 · Vision encoder-decoder ↗</a><a href="https://github.com/eyadstein/cxr_second_reader/blob/main/notebooks/04_approach3_vlm_lora.ipynb">04 · Qwen results review ↗</a><a href="https://github.com/eyadstein/cxr_second_reader/blob/main/notebooks/05_approach4_retrieval.ipynb">05 · Retrieval ↗</a><a href="https://github.com/eyadstein/cxr_second_reader/blob/main/notebooks/06_fusion_classifier.ipynb">06 · Fusion classifier ↗</a><a href="https://github.com/eyadstein/cxr_second_reader/blob/main/notebooks/07_discrepancy_gradcam.ipynb">07 · Grad-CAM ↗</a><a href="https://github.com/eyadstein/cxr_second_reader/blob/main/notebooks/08_rag_assistant.ipynb">08 · RAG assistant ↗</a><a href="https://github.com/eyadstein/cxr_second_reader/blob/main/notebooks/09_qwen3vl_cxr.ipynb">09 · Qwen3-VL training ↗</a></div></article>
-        <article class="card"><span class="card-number">APP & SETUP</span><h3>Run and understand the project</h3><p>The README documents local setup, data locations, training status, evaluation limits, and the issues resolved during development.</p><div class="link-list"><a href="https://github.com/eyadstein/cxr_second_reader/blob/main/README.md">README · project guide ↗</a><a href="https://github.com/eyadstein/cxr_second_reader/tree/main/api">FastAPI browser app ↗</a><a href="https://github.com/eyadstein/cxr_second_reader/blob/main/Dockerfile">Dockerfile ↗</a><a href="https://github.com/eyadstein/cxr_second_reader/blob/main/compose.yaml">Docker Compose ↗</a><a href="https://github.com/eyadstein/cxr_second_reader/tree/main/src">Shared data and evaluation code ↗</a></div></article>
-        <article class="card"><span class="card-number">GITHUB</span><h3>Workflow and releases</h3><p>See automated quality checks, website deployment, container publishing, and the tagged source release.</p><div class="link-list"><a href="https://github.com/eyadstein/cxr_second_reader/actions">Actions · workflow runs ↗</a><a href="https://github.com/eyadstein/cxr_second_reader/tree/main/.github/workflows">Workflow definitions ↗</a><a href="https://github.com/eyadstein/cxr_second_reader/releases/tag/v0.1.0">Release v0.1.0 ↗</a><a href="https://github.com/eyadstein/cxr_second_reader/tree/main">Repository · main branch ↗</a></div></article>
+    <section id="next" class="section">
+      <div class="section-heading"><p class="eyebrow">Continue from here</p><h2>Project checklist</h2><p>Check off work as you complete it. These selections are saved only in this browser.</p></div>
+      <div class="workboard">
+        <label class="task"><input type="checkbox" data-task="data"><span><b>Confirm local dataset path</b><small>Set <code>CXR_DATASET_ROOT</code> to the existing Indiana dataset folder.</small></span><a href="https://github.com/eyadstein/cxr_second_reader#run-locally-in-vscodejupyter-no-colab-required">Setup guide ↗</a></label>
+        <label class="task"><input type="checkbox" data-task="val"><span><b>Run validation on the current checkpoint</b><small>Use validation studies to compare checkpoints, not the previously viewed test examples.</small></span><a href="https://github.com/eyadstein/cxr_second_reader/blob/main/notebooks/09_qwen3vl_cxr.ipynb">Notebook 09 ↗</a></label>
+        <label class="task"><input type="checkbox" data-task="train"><span><b>Continue QLoRA training</b><small>Resume from saved adapter/optimizer state only after data, CUDA, and disk checks pass.</small></span><a href="https://github.com/eyadstein/cxr_second_reader/blob/main/notebooks/09_qwen3vl_cxr.ipynb">Training steps ↗</a></label>
+        <label class="task"><input type="checkbox" data-task="test"><span><b>Run the final paired test once</b><small>Previously exposed studies are excluded by the maintained evaluation cell.</small></span><a href="https://github.com/eyadstein/cxr_second_reader/blob/main/README.md#observed-run-and-evaluation-limits">Evaluation notes ↗</a></label>
+        <label class="task"><input type="checkbox" data-task="review"><span><b>Complete qualified clinical review</b><small>Review unsupported claims, omissions, laterality, and clinically important errors.</small></span><a href="https://github.com/eyadstein/cxr_second_reader/blob/main/README.md#observed-run-and-evaluation-limits">Limitations ↗</a></label>
       </div>
+      <button id="reset-checklist" class="text-button" type="button">Reset checklist</button>
+    </section>
+
+    <section id="notebooks" class="section">
+      <div class="section-heading"><p class="eyebrow">Project workflow</p><h2>Open a notebook or project file</h2><p>Each notebook is in the repository’s <code>main</code> branch. Open in VS Code/Jupyter and use the matching local environment.</p></div>
+      <div class="notebook-grid">
+        <a class="notebook-link" href="https://github.com/eyadstein/cxr_second_reader/blob/main/notebooks/00_baselines.ipynb"><span>00</span><b>Baselines</b><small>Controls and reference metrics</small></a>
+        <a class="notebook-link" href="https://github.com/eyadstein/cxr_second_reader/blob/main/notebooks/01_prepare_data.ipynb"><span>01</span><b>Prepare data</b><small>Metadata and study splits</small></a>
+        <a class="notebook-link" href="https://github.com/eyadstein/cxr_second_reader/blob/main/notebooks/02_approach1_cnn_attention_lstm.ipynb"><span>02</span><b>CNN + attention LSTM</b><small>Report-generation baseline</small></a>
+        <a class="notebook-link" href="https://github.com/eyadstein/cxr_second_reader/blob/main/notebooks/03_approach2_vision_encoder_decoder.ipynb"><span>03</span><b>Vision encoder-decoder</b><small>Image-to-text baseline</small></a>
+        <a class="notebook-link" href="https://github.com/eyadstein/cxr_second_reader/blob/main/notebooks/04_approach3_vlm_lora.ipynb"><span>04</span><b>Qwen results review</b><small>Validation and saved outputs</small></a>
+        <a class="notebook-link" href="https://github.com/eyadstein/cxr_second_reader/blob/main/notebooks/05_approach4_retrieval.ipynb"><span>05</span><b>Text retrieval</b><small>Indication-based control</small></a>
+        <a class="notebook-link" href="https://github.com/eyadstein/cxr_second_reader/blob/main/notebooks/06_fusion_classifier.ipynb"><span>06</span><b>Fusion classifier</b><small>Image plus indication</small></a>
+        <a class="notebook-link" href="https://github.com/eyadstein/cxr_second_reader/blob/main/notebooks/07_discrepancy_gradcam.ipynb"><span>07</span><b>Discrepancy + Grad-CAM</b><small>Exploratory review</small></a>
+        <a class="notebook-link" href="https://github.com/eyadstein/cxr_second_reader/blob/main/notebooks/08_rag_assistant.ipynb"><span>08</span><b>RAG assistant</b><small>Training-report retrieval</small></a>
+        <a class="notebook-link featured" href="https://github.com/eyadstein/cxr_second_reader/blob/main/notebooks/09_qwen3vl_cxr.ipynb"><span>09</span><b>Qwen3-VL</b><small>Training and paired evaluation</small></a>
+      </div>
+    </section>
+
+    <section class="section activity-section">
+      <div class="section-heading"><p class="eyebrow">Build and delivery</p><h2>GitHub activity</h2><p>Quality checks, Pages deployment, and container publishing run from the repository.</p></div>
+      <div id="workflow-list" class="workflow-list" aria-live="polite"><p>Loading recent GitHub workflow runs…</p></div>
+      <div class="actions"><a class="button secondary" href="https://github.com/eyadstein/cxr_second_reader/actions">All workflow runs ↗</a><a class="button secondary" href="https://github.com/eyadstein/cxr_second_reader/releases/tag/v0.1.0">Release v0.1.0 ↗</a><a class="button secondary" href="https://github.com/eyadstein/cxr_second_reader/blob/main/README.md">Full README ↗</a></div>
     </section>
 
     <section class="deployment-card">
-      <div><p class="eyebrow">For contributors</p><h2>Run the inference demo locally</h2><p>The FastAPI browser interface is included in the repository. Start it with Docker after placing the saved adapter in the documented local folder.</p></div>
-      <a class="button secondary" href="https://github.com/eyadstein/cxr_second_reader/tree/main/api">API setup guide ↗</a>
+      <div><p class="eyebrow">Local model app</p><h2>Use the API while training continues</h2><p>The Docker app runs on the project computer and loads the saved adapter. Start it from the project folder with <code>docker compose up -d</code>, then open the local app. The public Pages site is not connected to a hosted model.</p></div>
+      <a class="button primary" href="http://127.0.0.1:8000" target="_blank" rel="noopener">Open local app ↗</a>
     </section>
   </main>
-  <footer><span>CXR Second Reader · Educational research prototype</span><a href="https://github.com/eyadstein/cxr_second_reader">GitHub ↗</a><span>Not for clinical use</span></footer>
+  <footer><span>CXR Second Reader · Ongoing educational research</span><a href="https://github.com/eyadstein/cxr_second_reader">Repository ↗</a><span>Not for clinical use</span></footer>
 </body>
 </html>
