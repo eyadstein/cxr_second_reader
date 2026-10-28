@@ -154,6 +154,7 @@ app.add_middleware(
     allow_credentials=False,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
+    allow_private_network=True,
 )
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 SITE_DIR = Path(__file__).resolve().parents[1] / "docs"
