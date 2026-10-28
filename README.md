@@ -9,8 +9,8 @@ Generated text is an experimental draft and requires qualified clinician review.
 | Area | Status | Location |
 |---|---|---|
 | Indiana metadata preparation and study-level splits | Implemented; 6,685 image rows, 3,440 studies, no study overlap across splits in the reported run | `notebooks/09_qwen3vl_cxr.ipynb` |
-| Qwen3-VL 2B zero-shot baseline | Run completed on 24 held-out studies | Drive results copied to `qwen3vl_cxr/` |
-| Qwen3-VL QLoRA | Latest supplied archive records step 920 and includes adapter, optimizer, and loss history; a later Colab run began from step 0 because its Drive folder lacked that checkpoint | `qwen3vl_cxr/`, `notebooks/09_qwen3vl_cxr.ipynb` |
+| Qwen3-VL 2B zero-shot baseline | An earlier exploratory run generated 24 reports; those study IDs are treated as exposed and excluded from the new final test set | Drive results copied to `qwen3vl_cxr/` |
+| Qwen3-VL QLoRA | Latest supplied archive records step 920 (about 230 optimizer updates at accumulation 4) and includes adapter, optimizer, and loss history; this is a checkpoint count, not evidence of convergence or quality | `qwen3vl_cxr/`, `notebooks/09_qwen3vl_cxr.ipynb` |
 | FastAPI inference service | Implemented with a research-only browser UI; expects a CUDA GPU and saved adapter | `api/` |
 | Docker packaging and local API | Rebuilt and started; UI endpoints return HTTP 200, Qwen reached ready on RTX 3050, synthetic-image inference returned HTTP 200 | `Dockerfile`, `compose.yaml`, `api/` |
 | Constant-normal/random and text retrieval controls | Implemented | `notebooks/00_baselines.ipynb`, `notebooks/05_approach4_retrieval.ipynb` |
@@ -21,7 +21,7 @@ Generated text is an experimental draft and requires qualified clinician review.
 
 ## Observed run and evaluation limits
 
-An earlier saved Colab evaluation recorded these results on 24 studies:
+An earlier saved exploratory evaluation recorded these results on 24 studies:
 
 | Stage | ROUGE-L | BLEU | Studies |
 |---|---:|---:|---:|
@@ -29,21 +29,22 @@ An earlier saved Colab evaluation recorded these results on 24 studies:
 | Qwen QLoRA | 0.3312 | 0.0700 | 24 |
 
 The later archive supplied on 2026-10-28 records 920 training micro-batches
-(about 230 optimizer updates at gradient accumulation 4). Its evaluation CSVs
-still contain the earlier 24 predictions, so those metrics do not establish
-whether the step-920 checkpoint improved. The newer Colab notebook output then
-showed a separate run starting at step 0 and validating before training. The
-maintained notebook has been corrected: restore the step-920 ZIP into Drive if
-needed, train before validation, checkpoint every 8 micro-batches, and add 40
-micro-batches per run. This is resumable, not unlimited compute; Colab quotas
-and runtime interruptions still apply.
+(about 230 optimizer updates at gradient accumulation 4). The previous scores
+were copied from the earlier 24-case run, not computed at step 920, so they
+must not be presented as the newer checkpoint's result. The maintained Qwen
+notebook now uses validation for development, checkpoints after each optimizer
+update, and includes a paired final test stage that excludes previously exposed
+test studies. Run that final stage once after model selection is complete.
 
 ROUGE and BLEU measure text overlap, not clinical correctness. The sample
 generated report included unsupported rib/sternum observations and missed a
 small calcified granuloma. The model is not validated for diagnosis, triage, or
 patient care. The test set is small and should remain untouched for final
 reporting; use validation data for tuning and have qualified reviewers assess
-hallucinations, omissions, and clinically meaningful errors.
+hallucinations, omissions, and clinically meaningful errors. The repository's
+keyword metrics are weak heuristics, not clinical F1 or a validated
+hallucination rate. This project is a research prototype and is not
+production-ready for patient care.
 
 ## Project history: problems encountered and resolutions
 
@@ -120,28 +121,48 @@ mistaken for model findings or repeated unnecessarily.
    only; external source ingestion and grounded answer generation remain future
    work. Compare validation results during model selection.
 
-## Run the notebook workflow
+## Run locally in VS Code/Jupyter (no Colab required)
 
-1. Open `notebooks/09_qwen3vl_cxr.ipynb` from this checkout and connect it to a
-   Colab-hosted GPU runtime. In VS Code, choose the **Colab** connection in the
-   notebook toolbar; local **Python 3 (ipykernel)** has no Colab GPU.
-2. Run data preparation through **Save splits**. The notebook saves
-   `dataset.csv`, `train.csv`, `val.csv`, `test.csv`, and `split_manifest.csv`
-   under Google Drive's `cxr_shared` folder.
-3. Run Qwen setup and a single report preview. Then run the zero-shot baseline
-   and inspect its saved metrics before training.
-4. Run the training-data sanity check. Train in resumable chunks only if the
-   check passes and GPU time/storage are available.
-5. Compare with validation during development. Use the test split for final
-   reporting only.
+Use Python 3.11 in a dedicated environment. Install CUDA-enabled PyTorch for
+Windows from the official PyTorch selector first, then install the project
+notebook dependencies and register the kernel. The project does not install or
+replace PyTorch automatically because the correct CUDA build depends on the
+machine.
 
-Avoid **Run all** for routine notebook use because it can start training.
-There is no cumulative step limit, but each click performs one optimizer update
-(4 micro-batches) and saves progress. Colab can still end a session, hit quotas,
-or run out of GPU memory. If a GPU runtime crashes, reconnect and run the
-setup/reload cells; restore the supplied step-920 checkpoint if Drive is behind.
-After more training, run the final adapter-save cell before using the API so its
-adapter copy is updated.
+In a PowerShell terminal from the repository root:
+
+```powershell
+py -3.11 -m venv .venv-jupyter
+.\.venv-jupyter\Scripts\python.exe -m pip install --upgrade pip
+# Install the CUDA-enabled torch/torchvision build using https://pytorch.org/get-started/locally/
+.\.venv-jupyter\Scripts\python.exe -m pip install -r requirements.txt jupyterlab ipykernel
+.\.venv-jupyter\Scripts\python.exe -m ipykernel install --user --name cxr-second-reader --display-name "Python (CXR Second Reader)"
+$env:CXR_SHARED_DIR = (Join-Path (Get-Location) "cxr_shared")
+$env:CXR_DATASET_ROOT = "D:\path\to\existing\indiana_dataset"
+$env:QWEN_SAVE_DIR = (Join-Path (Get-Location) "qwen3vl_cxr")
+.\.venv-jupyter\Scripts\python.exe -m jupyter lab
+```
+
+Replace `D:\path\to\existing\indiana_dataset` with the folder that
+already contains the extracted Indiana images and metadata. The notebook will
+stop with a clear message if the dataset path is missing. Automatic dataset
+downloads are disabled unless you explicitly set
+`$env:CXR_ALLOW_DATASET_DOWNLOAD = "1"`. In VS Code, select the
+**Python (CXR Second Reader)** kernel. Run each notebook by stage; avoid **Run
+All** for GPU training workflows.
+
+The Qwen notebook checks CUDA before model setup. This computer's RTX 3050 has
+4 GB VRAM, which is enough for the local 4-bit inference service that was
+verified, but may not fit Qwen vision-language LoRA training. Training also
+needs substantial free disk space for dependencies, the base model, cached
+weights, dataset, and checkpoints. Do not start a long run until CUDA is
+visible, the data path resolves, and sufficient disk space is available.
+
+Notebooks 02–03 now include a final held-out test cell to run once after
+validation-based model selection. Notebook 05 queries retrieval by indication
+rather than by the target report. Qwen's final paired evaluation excludes
+studies already exposed in earlier preview runs and is only for final reporting.
+It cannot undo information already observed in prior experiments.
 
 ## Run the FastAPI and Docker service
 

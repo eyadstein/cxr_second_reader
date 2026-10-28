@@ -1,6 +1,7 @@
 """Load the shared Indiana CXR tables and resolve source/cache image files."""
 
 from functools import lru_cache
+import os
 from pathlib import Path
 
 import pandas as pd
@@ -82,7 +83,7 @@ def _image_index():
     """Build a filename index only when the Drive image cache is unavailable."""
     if DATASET_ROOT:
         root = Path(DATASET_ROOT)
-    else:
+    elif os.environ.get("CXR_ALLOW_DATASET_DOWNLOAD") == "1":
         try:
             import kagglehub
         except ImportError as exc:
@@ -91,6 +92,12 @@ def _image_index():
                 "Indiana dataset directory."
             ) from exc
         root = Path(kagglehub.dataset_download(INDIANA_SLUG))
+    else:
+        raise RuntimeError(
+            "Set CXR_DATASET_ROOT to the existing Indiana dataset folder. "
+            "Automatic download is disabled; to explicitly allow KaggleHub "
+            "download, set CXR_ALLOW_DATASET_DOWNLOAD=1."
+        )
     if not root.exists():
         raise FileNotFoundError(f"Dataset directory does not exist: {root}")
     return {p.name: p for p in root.rglob("*") if p.is_file() and p.suffix.lower() in _IMAGE_SUFFIXES}
